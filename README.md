@@ -34,7 +34,6 @@ This will open the Expo developer tools in your browser. You can then run the ap
 - axios: For making HTTP requests to fetch currency data.
 - @react-native-picker/picker: For the currency picker.
 - expo-linear-gradient: For gradient backgrounds.
-- react-native-flags (if using flags).
 - react-native (for building the app).
 - MaterialCommunityIcons (for the swap icon).
 
