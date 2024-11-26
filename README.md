@@ -24,7 +24,9 @@ or, if you're using yarn:
 
 ### 3. Run the Application
 Once all dependencies are installed, you can run the app using Expo CLI.
+
 ```expo start```
+
 This will open the Expo developer tools in your browser. You can then run the app on a connected mobile device, or use an emulator.
 
 ### Dependencies
