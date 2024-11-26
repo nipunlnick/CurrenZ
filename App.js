@@ -1,9 +1,14 @@
+import { Alert } from 'react-native';
 import axios from 'axios';
+
 import { Picker } from '@react-native-picker/picker';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+import DropDown from './components/Dropdown';
 
 const ThemeContext = createContext();
 const currenciesFlagData = require('./assets/data/currencies-with-flags.json');
@@ -22,12 +27,14 @@ const App = () => {
   const [baseValue, setBaseValue] = useState(1);
   const [targetValue, setTargetValue] = useState(1);
 
+  const [selectedCurrency, setSelectedCurrency] = useState(null);
   const options = ["USD", "EUR", "LKR", "JPY", "GBP", "KRW"];
   const filteredCurrencies = currenciesFlagData.filter(currency => options.includes(currency.code));
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
+  const themeStyles = isDarkMode ? darkThemeStyles : lightThemeStyles;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -116,8 +123,6 @@ const App = () => {
     return currency ? currency.flag : null;
   };
 
-  const themeStyles = isDarkMode ? darkThemeStyles : lightThemeStyles;
-
   return (
     <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
       <LinearGradient
@@ -143,24 +148,20 @@ const App = () => {
             <>
               <View style={themeStyles.currencyContainer}>
                 {/* Base Currency Input */}
-                <Picker
+                <DropDown
+                  options={options}
                   selectedValue={baseCurrency}
                   onValueChange={handleBaseCurrency}
+                  placeholder="USD"
+                  isDarkMode={isDarkMode}
                   style={themeStyles.picker}
-                >
-                  {options.map((option) => (
-                    <Picker.Item key={option} label={option} value={option} />
-                  ))}
-                </Picker>
-
+                />
                 {getCurrencyFlag(baseCurrency) && (
                   <Image
                     source={{ uri: getCurrencyFlag(baseCurrency) }}
                     style={themeStyles.flag}
                   />
                 )}
-
-                {/* Base Value Input */}
                 <TextInput
                   value={baseValue.toString()}
                   onChangeText={handleTargetValue}
@@ -179,16 +180,14 @@ const App = () => {
 
               {/* Target Currency Input */}
               <View style={themeStyles.currencyContainer}>
-                <Picker
+                <DropDown
+                  options={options}
                   selectedValue={targetCurrency}
                   onValueChange={handleTargetCurrency}
+                  placeholder="LKR"
+                  isDarkMode={isDarkMode}
                   style={themeStyles.picker}
-                >
-                  {options.map((option) => (
-                    <Picker.Item key={option} label={option} value={option} />
-                  ))}
-                </Picker>
-
+                />
                 {getCurrencyFlag(targetCurrency) && (
                   <Image
                     source={{ uri: getCurrencyFlag(targetCurrency) }}
@@ -234,7 +233,7 @@ const lightThemeStyles = StyleSheet.create({
     shadowOffset: { width: 1, height: 2 },
     shadowRadius: 5,
     verticalAlign: 'center',
-    width: '85%',
+    width: '80%',
   },
   currencyContainer: {
     alignItems: 'center',
@@ -245,9 +244,10 @@ const lightThemeStyles = StyleSheet.create({
   },
   flag: {
     flex: 1,
-    height: 30,
-    marginRight: 10,
-    width: 20,
+    height: 40,
+    marginLeft: 15,
+    marginRight: 15,
+    width: 50,
   },
   iconContainer: {
     alignSelf: 'center',
@@ -270,8 +270,7 @@ const lightThemeStyles = StyleSheet.create({
     padding: 10,
   },
   picker: {
-    flex: 4,
-    width: 'auto',
+    flex: 1,
   },
   rate: {
     textAlign: 'center',
@@ -320,7 +319,7 @@ const darkThemeStyles = StyleSheet.create({
     shadowOffset: { width: 1, height: 2 },
     shadowRadius: 5,
     verticalAlign: 'center',
-    width: '85%',
+    width: '80%',
   },
   currencyContainer: {
     alignItems: 'center',
@@ -331,9 +330,10 @@ const darkThemeStyles = StyleSheet.create({
   },
   flag: {
     flex: 1,
-    height: 30,
-    marginRight: 10,
-    width: 20,
+    height: 40,
+    marginLeft: 15,
+    marginRight: 15,
+    width: 50,
   },
   iconContainer: {
     alignSelf: 'center',
@@ -358,7 +358,6 @@ const darkThemeStyles = StyleSheet.create({
   },
   picker: {
     flex: 4,
-    color: '#fff',
     width: 'auto',
   },
   rate: {
