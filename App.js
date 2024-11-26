@@ -1,15 +1,18 @@
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
-import React, { useState, useEffect } from 'react';
-import { ActivityIndicator, Image, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { ActivityIndicator, Image, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+const ThemeContext = createContext();
 const currenciesFlagData = require('./assets/data/currencies-with-flags.json');
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   //const [isMore, setIsMore] = useState(false);
+
   const [error, setError] = useState(null);
   const [currencyData, setCurrencyData] = useState();
   const [currencyCodes, setCurrencyCodes] = useState([]);
@@ -18,8 +21,13 @@ const App = () => {
   const [rate, setRate] = useState(0);
   const [baseValue, setBaseValue] = useState(1);
   const [targetValue, setTargetValue] = useState(1);
+
   const options = ["USD", "EUR", "LKR", "JPY", "GBP", "KRW"];
   const filteredCurrencies = currenciesFlagData.filter(currency => options.includes(currency.code));
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,6 +75,7 @@ const App = () => {
         //   console.error("Error during request setup:", error.message);
         //   setError("Failed to fetch currency data. Please check your network connection.");
         // }
+
       } finally {
         setIsLoading(false);
       }
@@ -105,164 +114,272 @@ const App = () => {
     return currency ? currency.flag : null;
   };
 
+  const themeStyles = isDarkMode ? darkThemeStyles : lightThemeStyles;
+
   return (
-    <LinearGradient
-      colors={['#3aa7ff', '#a7dafe']}
-      style={styles.background}
-    >
-      <View style={styles.card}>
-        <Text style={styles.title}>CurrenZ</Text>
-        {isLoading ? (
-          <ActivityIndicator size="large" color="#14b8fb" />
-        ) : error ? (
-          <Text style={{ color: 'red', textAlign: 'center', }}>{error}</Text>
-        ) : (
-          <>
-            <View style={styles.currencyContainer}>
-              {/* Base Currency Input */}
-              <Picker
-                selectedValue={baseCurrency}
-                onValueChange={handleBaseCurrency}
-                style={styles.picker}
-              >
-                {options.map((option) => (
-                  <Picker.Item key={option} label={option} value={option} />
-                ))}
-              </Picker>
+    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+      <LinearGradient
+        colors={isDarkMode ? ['#121b34', '#0c5472'] : ['#3aa7ff', '#a7dafe']}
+        style={themeStyles.background}
+      >
+        {/* Theme Toggle Switch */}
+        <View style={themeStyles.toggleContainer}>
+          <Switch
+            value={isDarkMode}
+            onValueChange={toggleTheme}
+            thumbColor={isDarkMode ? "#3aa7ff" : "#121b34"}
+            trackColor={{ false: "#0c5472", true: "#a7dafe" }}
+          />
+        </View>
+        <View style={themeStyles.card}>
+          <Text style={themeStyles.title}>CurrenZ</Text>
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#14b8fb" />
+          ) : error ? (
+            <Text style={{ color: 'red', textAlign: 'center', }}>{error}</Text>
+          ) : (
+            <>
+              <View style={themeStyles.currencyContainer}>
+                {/* Base Currency Input */}
+                <Picker
+                  selectedValue={baseCurrency}
+                  onValueChange={handleBaseCurrency}
+                  style={themeStyles.picker}
+                >
+                  {options.map((option) => (
+                    <Picker.Item key={option} label={option} value={option} />
+                  ))}
+                </Picker>
 
-              {getCurrencyFlag(baseCurrency) && (
-                <Image
-                  source={{ uri: getCurrencyFlag(baseCurrency) }}
-                  style={styles.flag}
+                {getCurrencyFlag(baseCurrency) && (
+                  <Image
+                    source={{ uri: getCurrencyFlag(baseCurrency) }}
+                    style={themeStyles.flag}
+                  />
+                )}
+
+                {/* Base Value Input */}
+                <TextInput
+                  value={baseValue.toString()}
+                  onChangeText={handleTargetValue}
+                  keyboardType="numeric"
+                  placeholder="Enter value"
+                  style={themeStyles.input}
                 />
-              )}
+              </View>
 
-              {/* Base Value Input */}
-              <TextInput
-                value={baseValue.toString()}
-                onChangeText={handleTargetValue}
-                keyboardType="numeric"
-                placeholder="Enter value"
-                style={styles.input}
-              />
-            </View>
+              <View style={themeStyles.iconContainer}>
+                {/* Swap Button */}
+                <TouchableOpacity onPress={handleSwap}>
+                  <MaterialCommunityIcons name="swap-horizontal" size={32} color="white" />
+                </TouchableOpacity>
+              </View>
 
-            <View style={styles.iconContainer}>
-              {/* Swap Button */}
-              <TouchableOpacity onPress={handleSwap}>
-                <MaterialCommunityIcons name="swap-horizontal" size={32} color="white" />
-              </TouchableOpacity>
-            </View>
+              {/* Target Currency Input */}
+              <View style={themeStyles.currencyContainer}>
+                <Picker
+                  selectedValue={targetCurrency}
+                  onValueChange={handleTargetCurrency}
+                  style={themeStyles.picker}
+                >
+                  {options.map((option) => (
+                    <Picker.Item key={option} label={option} value={option} />
+                  ))}
+                </Picker>
 
-            {/* Target Currency Input */}
-            <View style={styles.currencyContainer}>
-              <Picker
-                selectedValue={targetCurrency}
-                onValueChange={handleTargetCurrency}
-                style={styles.picker}
-              >
-                {options.map((option) => (
-                  <Picker.Item key={option} label={option} value={option} />
-                ))}
-              </Picker>
+                {getCurrencyFlag(targetCurrency) && (
+                  <Image
+                    source={{ uri: getCurrencyFlag(targetCurrency) }}
+                    style={themeStyles.flag}
+                  />
+                )}
 
-              {getCurrencyFlag(targetCurrency) && (
-                <Image
-                  source={{ uri: getCurrencyFlag(targetCurrency) }}
-                  style={styles.flag}
+                {/* Target Value Output */}
+                <TextInput
+                  value={targetValue.toString()}
+                  editable={false}
+                  style={themeStyles.input}
                 />
-              )}
+              </View>
 
-              {/* Target Value Output */}
-              <TextInput
-                value={targetValue.toString()}
-                editable={false}
-                style={styles.input}
-              />
-            </View>
-
-            {/* Conversion Rate */}
-            <Text style={{
-              textAlign: 'center',
-              fontSize: 16,
-              color: '#666',
-              marginBottom: 10,
-            }}>
-              {`1 ${baseCurrency} = ${rate ? rate.toFixed(8) : 'N/A'} ${targetCurrency}`}
-            </Text>
-          </>
-        )}
-      </View>
-    </LinearGradient>
+              {/* Conversion Rate */}
+              <Text style={themeStyles.rate}>
+                {`1 ${baseCurrency} = ${rate ? rate.toFixed(8) : 'N/A'} ${targetCurrency}`}
+              </Text>
+            </>
+          )}
+        </View>
+      </LinearGradient>
+    </ThemeContext.Provider>
   );
 };
 
-const styles = StyleSheet.create({
+const lightThemeStyles = StyleSheet.create({
   background: {
+    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   card: {
-    width: '80%',
-    height: 'auto',
     alignSelf: 'center',
-    verticalAlign: 'center',
-    padding: 20,
     borderRadius: 10,
     backgroundColor: 'white',
     elevation: 10,
+    height: 'auto',
+    padding: 20,
     shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowOffset: { width: 1, height: 2 },
     shadowRadius: 5,
+    verticalAlign: 'center',
+    width: '80%',
   },
   currencyContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    flexDirection: 'row',
     height: 50,
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
   flag: {
-    height: 30,
-    width: 20,
-    marginRight: 10,
     flex: 1,
+    height: 30,
+    marginRight: 10,
+    width: 20,
   },
   iconContainer: {
-    alignItems: 'center',
-    marginBottom: 15,
-    borderRadius: 25,
-    backgroundColor: '#14b8fb',
-    width: 50,
-    height: 50,
-    transform: [{ rotate: '90deg' }],
-    justifyContent: 'center',
     alignSelf: 'center',
+    alignItems: 'center',
+    backgroundColor: '#14b8fb',
+    borderRadius: 25,
+    height: 50,
+    justifyContent: 'center',
+    marginBottom: 15,
+    transform: [{ rotate: '90deg' }],
+    width: 50,
   },
   input: {
-    flex: 3,
     borderColor: '#ccc',
     borderRadius: 5,
     borderWidth: 1,
+    flex: 3,
     padding: 10,
   },
   picker: {
     flex: 3,
   },
+  rate: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 10,
+  },
   swapButton: {
+    alignItems: 'center',
     alignSelf: 'center',
     borderRadius: 25,
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
     marginBottom: 30,
+    padding: 20,
   },
   title: {
+    color: '#14b8fb',
     fontSize: 24,
-    textAlign: 'center',
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
     marginBottom: 20,
+    textAlign: 'center',
+  },
+  toggleContainer: {
+    position: 'absolute',
+    right: 20,
+    top: 50,
+  },
+});
+
+const darkThemeStyles = StyleSheet.create({
+  background: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  card: {
+    alignSelf: 'center',
+    borderRadius: 10,
+    backgroundColor: '#171f31',
+    elevation: 10,
+    height: 'auto',
+    padding: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 1, height: 2 },
+    shadowRadius: 5,
+    verticalAlign: 'center',
+    width: '80%',
+  },
+  currencyContainer: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    height: 50,
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  flag: {
+    flex: 1,
+    height: 30,
+    marginRight: 10,
+    width: 20,
+  },
+  iconContainer: {
+    alignSelf: 'center',
+    alignItems: 'center',
+    backgroundColor: '#14b8fb',
+    borderRadius: 25,
+    height: 50,
+    justifyContent: 'center',
+    marginBottom: 15,
+    transform: [{ rotate: '90deg' }],
+    width: 50,
+  },
+  input: {
+    backgroundColor: '#0f172a',
+    borderColor: '#262e35',
+    borderRadius: 5,
+    borderWidth: 1,
+    color: '#fff',
+    flex: 3,
+    padding: 10,
+  },
+  picker: {
+    flex: 3,
+    color: '#fff',
+  },
+  rate: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#999',
+    marginBottom: 10,
+  },
+  swapButton: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    borderRadius: 25,
+    justifyContent: 'center',
+    marginBottom: 30,
+    padding: 20,
+  },
+  title: {
+    color: '#14b8fb',
+    fontSize: 24,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  toggleContainer: {
+    position: 'absolute',
+    right: 20,
+    top: 50,
   },
 });
 
