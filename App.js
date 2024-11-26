@@ -34,7 +34,6 @@ const App = () => {
       try {
         setIsLoading(true);
         // console.log("Fetching data...");
-
         const response = await axios.get(`https://openexchangerates.org/api/latest.json?app_id=574dd5e6f04e438fa5d99c3dfbd77a59&base=USD`);
         // console.log("API response:", response);
 
@@ -44,20 +43,23 @@ const App = () => {
         setCurrencyCodes(codes);
 
         // Update rate and target value
+        let newRate;
         if (baseCurrency === 'USD') {
-          // USD to targetCurrency
-          setRate(data.rates[targetCurrency]);
+          newRate = data.rates[targetCurrency];
         } else if (targetCurrency === 'USD') {
-          // baseCurrency to USD
-          setRate(1 / data.rates[baseCurrency]);
+          newRate = 1 / data.rates[baseCurrency];
         } else {
-          // baseCurrency to targetCurrency
-          const calculatedRate = data.rates[targetCurrency] / data.rates[baseCurrency];
-          setRate(calculatedRate);
+          // We can only call API, USD as the base currency
+          newRate = data.rates[targetCurrency] / data.rates[baseCurrency];
         }
-        setTargetValue((baseValue * rate).toFixed(4));
+        setRate(newRate);
+
+        // Update the target value after the rate has been calculated
+        const newTargetValue = (baseValue * newRate).toFixed(4);
+        setTargetValue(newTargetValue);
 
       } catch (error) {
+        setIsLoading(false);
         console.error("Error fetching data:", error);
         setError("Failed to fetch currency data. Please check your network connection.");
         Alert.alert("Error", "Failed to fetch currency data. Please try again.");
@@ -232,7 +234,7 @@ const lightThemeStyles = StyleSheet.create({
     shadowOffset: { width: 1, height: 2 },
     shadowRadius: 5,
     verticalAlign: 'center',
-    width: '80%',
+    width: '85%',
   },
   currencyContainer: {
     alignItems: 'center',
@@ -259,14 +261,17 @@ const lightThemeStyles = StyleSheet.create({
     width: 50,
   },
   input: {
+    backgroundColor: '#eee',
     borderColor: '#ccc',
     borderRadius: 5,
     borderWidth: 1,
-    flex: 3,
+    flex: 4,
+    marginRight: 5,
     padding: 10,
   },
   picker: {
-    flex: 3,
+    flex: 4,
+    width: 'auto',
   },
   rate: {
     textAlign: 'center',
@@ -305,17 +310,17 @@ const darkThemeStyles = StyleSheet.create({
   },
   card: {
     alignSelf: 'center',
-    borderRadius: 10,
+    borderRadius: 15,
     backgroundColor: '#171f31',
     elevation: 10,
     height: 'auto',
-    padding: 20,
+    padding: 10,
     shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowOffset: { width: 1, height: 2 },
     shadowRadius: 5,
     verticalAlign: 'center',
-    width: '80%',
+    width: '85%',
   },
   currencyContainer: {
     alignItems: 'center',
@@ -347,12 +352,14 @@ const darkThemeStyles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 1,
     color: '#fff',
-    flex: 3,
+    flex: 4,
+    marginRight: 5,
     padding: 10,
   },
   picker: {
-    flex: 3,
+    flex: 4,
     color: '#fff',
+    width: 'auto',
   },
   rate: {
     textAlign: 'center',
